@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 // TMDb API configuration
-const TMDB_API_KEY = 'be15ad0ba29bb61c8a3ec89bbc5b6ebe'; // TMDb API key configured
+const TMDB_API_KEY = '38c007f28d5b66f36b9c3cf8d8452a4b'; // TMDb API key configured
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
