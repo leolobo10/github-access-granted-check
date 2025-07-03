@@ -21,90 +21,55 @@ serve(async (req) => {
     const { action, email, password, userData } = await req.json()
 
     if (action === 'signup') {
-      // Create auth user
+      console.log('Creating user:', email)
+      
+      // Check if user already exists in auth
+      const { data: existingUsers } = await supabase.auth.admin.listUsers()
+      const existingUser = existingUsers.users.find(u => u.email === email)
+      
+      if (existingUser) {
+        console.log('User already exists in auth, deleting first')
+        await supabase.auth.admin.deleteUser(existingUser.id)
+      }
+
+      // Create auth user with admin API
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: true, // Auto-confirm email for testing
+        email_confirm: true,
         phone_confirm: true,
         user_metadata: userData
       })
 
       if (authError) {
-        // Handle specific auth errors with appropriate status codes
-        if (authError.message.includes('A user with this email address has already been registered')) {
-          // Check if user exists in our cliente table
-          const { data: existingCliente } = await supabase
-            .from('cliente')
-            .select('idcliente')
-            .eq('email', email)
-            .single()
-
-          if (!existingCliente) {
-            // User exists in auth but not in cliente table - this is an orphaned user
-            // Try to delete the orphaned auth user first
-            try {
-              const { data: authUsers } = await supabase.auth.admin.listUsers()
-              const orphanedUser = authUsers.users.find(u => u.email === email)
-              
-              if (orphanedUser) {
-                await supabase.auth.admin.deleteUser(orphanedUser.id)
-                // Now try to create the user again
-                const { data: retryAuthData, error: retryAuthError } = await supabase.auth.admin.createUser({
-                  email,
-                  password,
-                  email_confirm: true,
-                  phone_confirm: true,
-                  user_metadata: userData
-                })
-
-                if (!retryAuthError && retryAuthData.user) {
-                  // Insert into cliente table
-                  const { error: clienteError } = await supabase
-                    .from('cliente')
-                    .insert({
-                      idcliente: retryAuthData.user.id,
-                      nome: userData.nome,
-                      email: email,
-                      senha: 'supabase_auth',
-                      telefone: userData.telefone || null,
-                      endereco: userData.endereco || null,
-                      ativo: true
-                    })
-
-                  if (clienteError) {
-                    throw new Error(`Database error: ${clienteError.message}`)
-                  }
-
-                  return new Response(
-                    JSON.stringify({ 
-                      success: true, 
-                      user: retryAuthData.user,
-                      message: 'Conta criada com sucesso!' 
-                    }),
-                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                  )
-                }
-              }
-            } catch (cleanupError) {
-              console.error('Error cleaning up orphaned user:', cleanupError)
-            }
-          }
-          
-          return new Response(
-            JSON.stringify({ 
-              error: 'Este email já está registado. Tente fazer login.',
-              success: false 
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        throw new Error(`Auth error: ${authError.message}`)
+        console.error('Auth creation error:', authError)
+        return new Response(
+          JSON.stringify({ 
+            error: `Erro ao criar utilizador: ${authError.message}`,
+            success: false 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
 
       if (!authData.user) {
-        throw new Error('Falha ao criar utilizador')
+        console.error('No user data returned')
+        return new Response(
+          JSON.stringify({ 
+            error: 'Falha ao criar utilizador',
+            success: false 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
+
+      console.log('User created in auth:', authData.user.id)
+
+      // Delete existing cliente record if exists
+      await supabase
+        .from('cliente')
+        .delete()
+        .eq('email', email)
 
       // Insert into cliente table with service role (bypasses RLS)
       const { error: clienteError } = await supabase
@@ -121,8 +86,18 @@ serve(async (req) => {
 
       if (clienteError) {
         console.error('Erro ao inserir cliente:', clienteError)
-        throw new Error(`Database error: ${clienteError.message}`)
+        // If cliente creation fails, delete the auth user to avoid orphans
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        return new Response(
+          JSON.stringify({ 
+            error: `Erro na base de dados: ${clienteError.message}`,
+            success: false 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
+
+      console.log('User created successfully:', authData.user.id)
 
       return new Response(
         JSON.stringify({ 
@@ -157,7 +132,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ error: 'Ação inválida' }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
