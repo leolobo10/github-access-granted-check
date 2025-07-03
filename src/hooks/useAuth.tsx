@@ -104,40 +104,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
-      const { data, error } = await supabase.functions.invoke('auth-user', {
-        body: { 
-          action: 'signup', 
-          email, 
-          password, 
-          userData 
+      console.log('Starting signup process for:', email);
+      
+      // Usar o client Supabase directamente
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData
         }
       });
 
       if (error) {
-        console.error('Edge function error:', error);
-        return { error: error.message || 'Erro ao criar conta' };
+        console.error('Signup error:', error);
+        return { error: error.message };
       }
 
-      if (data?.error) {
-        return { error: data.error };
-      }
-
-      if (data?.success) {
-        // Now sign in the user
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (signInError) {
-          console.error('Auto sign-in error:', signInError);
-          return { error: 'Conta criada, mas erro no login automático. Tente fazer login.' };
-        }
-
+      if (data.user) {
+        console.log('User created successfully:', data.user.id);
         return { error: null };
       }
 
-      return { error: 'Resposta inesperada do servidor' };
+      return { error: 'Falha na criação do utilizador' };
     } catch (error) {
       console.error('Erro no signup:', error);
       return { error: 'Erro inesperado ao criar conta' };
