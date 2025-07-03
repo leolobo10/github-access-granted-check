@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -78,6 +79,39 @@ export default function Auth() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const syncUser = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-user', {
+        body: {
+          email: 'leo@gmail.com',
+          password: 'leonardo'
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: data.message || 'Utilizador sincronizado',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: 'Erro ao sincronizar utilizador',
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -155,6 +189,17 @@ export default function Auth() {
             </Button>
           </form>
 
+          <div className="mt-4 space-y-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full" 
+              onClick={syncUser}
+              disabled={loading}
+            >
+              🔄 Sincronizar leo@gmail.com
+            </Button>
+          </div>
 
           <div className="mt-4 text-center">
             <button
