@@ -84,25 +84,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: error.message };
       }
 
-      if (data.user) {
-        // Insert user data into Cliente table
-        const { error: insertError } = await supabase
-          .from('cliente')
-          .insert({
-            idcliente: data.user.id,
-            nome: userData.nome,
-            email: email,
-            senha: password, // In production, this should be hashed
-            telefone: userData.telefone,
-            endereco: userData.endereco,
-            ativo: true
-          });
-
-        if (insertError) {
-          console.error('Error inserting cliente data:', insertError);
-          return { error: 'Erro ao criar perfil do cliente' };
-        }
-      }
+      // Note: User data will be inserted into Cliente table after email confirmation
+      // This is handled by the auth state change listener
 
       return { error: null };
     } catch (error) {
