@@ -98,7 +98,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ error: 'Ação inválida' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
