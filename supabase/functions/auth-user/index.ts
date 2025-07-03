@@ -32,6 +32,63 @@ serve(async (req) => {
       if (authError) {
         // Handle specific auth errors with appropriate status codes
         if (authError.message.includes('A user with this email address has already been registered')) {
+          // Check if user exists in our cliente table
+          const { data: existingCliente } = await supabase
+            .from('cliente')
+            .select('idcliente')
+            .eq('email', email)
+            .single()
+
+          if (!existingCliente) {
+            // User exists in auth but not in cliente table - this is an orphaned user
+            // Try to delete the orphaned auth user first
+            try {
+              const { data: authUsers } = await supabase.auth.admin.listUsers()
+              const orphanedUser = authUsers.users.find(u => u.email === email)
+              
+              if (orphanedUser) {
+                await supabase.auth.admin.deleteUser(orphanedUser.id)
+                // Now try to create the user again
+                const { data: retryAuthData, error: retryAuthError } = await supabase.auth.admin.createUser({
+                  email,
+                  password,
+                  email_confirm: true,
+                  user_metadata: userData
+                })
+
+                if (!retryAuthError && retryAuthData.user) {
+                  // Insert into cliente table
+                  const { error: clienteError } = await supabase
+                    .from('cliente')
+                    .insert({
+                      idcliente: retryAuthData.user.id,
+                      nome: userData.nome,
+                      email: email,
+                      senha: 'supabase_auth',
+                      telefone: userData.telefone || null,
+                      endereco: userData.endereco || null,
+                      ativo: true
+                    })
+
+                  if (clienteError) {
+                    throw new Error(`Database error: ${clienteError.message}`)
+                  }
+
+                  return new Response(
+                    JSON.stringify({ 
+                      success: true, 
+                      user: retryAuthData.user,
+                      message: 'Conta criada com sucesso!' 
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  )
+                }
+              }
+            } catch (cleanupError) {
+              console.error('Error cleaning up orphaned user:', cleanupError)
+            }
+          }
+          
           return new Response(
             JSON.stringify({ 
               error: 'Este email já está registado. Tente fazer login.',
