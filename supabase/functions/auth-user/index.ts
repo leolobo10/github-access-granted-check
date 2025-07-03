@@ -30,6 +30,16 @@ serve(async (req) => {
       })
 
       if (authError) {
+        // Handle specific auth errors with appropriate status codes
+        if (authError.message.includes('A user with this email address has already been registered')) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Este email já está registado. Tente fazer login.',
+              success: false 
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
         throw new Error(`Auth error: ${authError.message}`)
       }
 
