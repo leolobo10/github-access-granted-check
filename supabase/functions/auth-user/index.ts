@@ -37,7 +37,7 @@ serve(async (req) => {
               error: 'Este email já está registado. Tente fazer login.',
               success: false 
             }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
         throw new Error(`Auth error: ${authError.message}`)

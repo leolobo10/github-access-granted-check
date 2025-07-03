@@ -78,13 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Edge function error:', error);
-        // Try to extract error message from response if available
-        if (error.message?.includes('non-2xx status code')) {
-          // This means we got a controlled error (like 400) with a message in data
-          if (data?.error) {
-            return { error: data.error };
-          }
-        }
         return { error: error.message || 'Erro ao criar conta' };
       }
 
