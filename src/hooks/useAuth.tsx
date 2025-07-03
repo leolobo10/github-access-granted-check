@@ -104,31 +104,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
-      console.log('Starting signup process for:', email);
+      console.log('=== SIGNUP START ===');
+      console.log('Email:', email);
+      console.log('UserData:', userData);
       
-      // Usar o client Supabase directamente
+      // Primeiro, verificar se o email já existe
+      const { data: existingUser } = await supabase.auth.getUser();
+      console.log('Current user:', existingUser);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData
+          data: {
+            nome: userData.nome,
+            telefone: userData.telefone,
+            endereco: userData.endereco
+          }
         }
       });
 
+      console.log('Signup response data:', data);
+      console.log('Signup response error:', error);
+
       if (error) {
-        console.error('Signup error:', error);
-        return { error: error.message };
+        console.error('Signup error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        
+        // Tratar diferentes tipos de erro
+        if (error.message.includes('already registered')) {
+          return { error: 'Este email já está registado. Tente fazer login.' };
+        }
+        if (error.message.includes('weak password')) {
+          return { error: 'A senha deve ter pelo menos 6 caracteres.' };
+        }
+        if (error.message.includes('invalid email')) {
+          return { error: 'Email inválido.' };
+        }
+        
+        return { error: `Erro: ${error.message}` };
       }
 
       if (data.user) {
-        console.log('User created successfully:', data.user.id);
+        console.log('=== SIGNUP SUCCESS ===');
+        console.log('User created:', data.user.id);
         return { error: null };
       }
 
+      console.log('=== SIGNUP FAILED - NO USER ===');
       return { error: 'Falha na criação do utilizador' };
-    } catch (error) {
-      console.error('Erro no signup:', error);
-      return { error: 'Erro inesperado ao criar conta' };
+    } catch (error: any) {
+      console.error('=== SIGNUP EXCEPTION ===', error);
+      return { error: `Erro inesperado: ${error.message}` };
     }
   };
 
