@@ -67,33 +67,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            nome: userData.nome,
-            telefone: userData.telefone,
-            endereco: userData.endereco
-          }
+      const { data, error } = await supabase.functions.invoke('auth-user', {
+        body: { 
+          action: 'signup', 
+          email, 
+          password, 
+          userData 
         }
       });
 
       if (error) {
-        if (error.message.includes('User already registered')) {
-          return { error: 'Este email já está registado. Tente fazer login.' };
-        }
-        return { error: error.message };
+        console.error('Edge function error:', error);
+        return { error: error.message || 'Erro ao criar conta' };
       }
 
-      // Note: User data will be inserted into Cliente table after email confirmation
-      // This is handled by the auth state change listener
+      if (data?.error) {
+        return { error: data.error };
+      }
 
-      return { error: null };
+      if (data?.success) {
+        // Now sign in the user
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (signInError) {
+          console.error('Auto sign-in error:', signInError);
+          return { error: 'Conta criada, mas erro no login automático. Tente fazer login.' };
+        }
+
+        return { error: null };
+      }
+
+      return { error: 'Resposta inesperada do servidor' };
     } catch (error) {
+      console.error('Erro no signup:', error);
       return { error: 'Erro inesperado ao criar conta' };
     }
   };

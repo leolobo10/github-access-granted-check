@@ -43,14 +43,20 @@ export const useMovies = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('filmesadicionados')
-        .select('*')
-        .eq('idcliente', user.id)
-        .order('dataadicionado', { ascending: false });
+      const { data, error } = await supabase.functions.invoke('movie-list', {
+        body: { action: 'list' }
+      });
 
-      if (error) throw error;
-      setUserMovies(data || []);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Erro ao carregar lista');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setUserMovies(data?.movies || []);
     } catch (error) {
       console.error('Error fetching user movies:', error);
       toast({
@@ -152,36 +158,39 @@ export const useMovies = () => {
     }
 
     try {
-      // Check if movie already exists in user's list
-      const { data: existing } = await supabase
-        .from('filmesadicionados')
-        .select('idfilmeadicionado')
-        .eq('idcliente', user.id)
-        .eq('nomefilme', movieTitle)
-        .single();
+      const { data, error } = await supabase.functions.invoke('movie-list', {
+        body: { 
+          action: 'add', 
+          movieData: { ...movie, title: movieTitle } 
+        }
+      });
 
-      if (existing) {
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Erro ao adicionar filme');
+      }
+
+      if (data?.error) {
         toast({
-          title: "Já na lista",
-          description: "Este filme já está na sua lista",
+          title: "Erro",
+          description: data.error,
           variant: "destructive",
         });
         return false;
       }
 
-      // Add movie to user's list
-      const { error } = await supabase
-        .from('filmesadicionados')
-        .insert({
-          idcliente: user.id,
-          nomefilme: movieTitle
+      if (data?.success === false) {
+        toast({
+          title: "Aviso",
+          description: data.message,
+          variant: "destructive",
         });
-
-      if (error) throw error;
+        return false;
+      }
 
       toast({
         title: "Sucesso",
-        description: `"${movieTitle}" foi adicionado à sua lista`,
+        description: data.message || `"${movieTitle}" foi adicionado à sua lista`,
       });
 
       // Refresh user's movie list
@@ -203,17 +212,30 @@ export const useMovies = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('filmesadicionados')
-        .delete()
-        .eq('idfilmeadicionado', movieId)
-        .eq('idcliente', user.id);
+      const { data, error } = await supabase.functions.invoke('movie-list', {
+        body: { 
+          action: 'remove', 
+          movieData: { movieId } 
+        }
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Erro ao remover filme');
+      }
+
+      if (data?.error) {
+        toast({
+          title: "Erro",
+          description: data.error,
+          variant: "destructive",
+        });
+        return false;
+      }
 
       toast({
         title: "Sucesso",
-        description: "Filme removido da sua lista",
+        description: data.message || "Filme removido da sua lista",
       });
 
       // Refresh user's movie list
