@@ -26,6 +26,7 @@ serve(async (req) => {
         email,
         password,
         email_confirm: true, // Auto-confirm email for testing
+        phone_confirm: true,
         user_metadata: userData
       })
 
@@ -53,6 +54,7 @@ serve(async (req) => {
                   email,
                   password,
                   email_confirm: true,
+                  phone_confirm: true,
                   user_metadata: userData
                 })
 
