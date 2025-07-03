@@ -61,7 +61,10 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Movie streaming specific colors
+				'movie-card': 'hsl(var(--movie-card))',
+				'movie-card-hover': 'hsl(var(--movie-card-hover))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

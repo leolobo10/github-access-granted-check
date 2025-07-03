@@ -9,7 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cliente: {
+        Row: {
+          ativo: boolean
+          datacadastro: string
+          email: string
+          endereco: string | null
+          idcliente: string
+          nome: string
+          senha: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          datacadastro?: string
+          email: string
+          endereco?: string | null
+          idcliente?: string
+          nome: string
+          senha: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          datacadastro?: string
+          email?: string
+          endereco?: string | null
+          idcliente?: string
+          nome?: string
+          senha?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      filmesadicionados: {
+        Row: {
+          dataadicionado: string
+          idcliente: string
+          idfilmeadicionado: string
+          nomefilme: string
+          updated_at: string
+        }
+        Insert: {
+          dataadicionado?: string
+          idcliente: string
+          idfilmeadicionado?: string
+          nomefilme: string
+          updated_at?: string
+        }
+        Update: {
+          dataadicionado?: string
+          idcliente?: string
+          idfilmeadicionado?: string
+          nomefilme?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filmesadicionados_idcliente_fkey"
+            columns: ["idcliente"]
+            isOneToOne: false
+            referencedRelation: "cliente"
+            referencedColumns: ["idcliente"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
