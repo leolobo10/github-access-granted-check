@@ -47,20 +47,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting login for:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Login response:', { data, error });
+
       if (error) {
+        console.error('Login error:', error);
         if (error.message.includes('Invalid login credentials')) {
           return { error: 'Email ou senha incorretos' };
         }
         return { error: error.message };
       }
 
+      console.log('Login successful:', data.user?.id);
       return { error: null };
     } catch (error) {
+      console.error('Unexpected login error:', error);
       return { error: 'Erro inesperado ao fazer login' };
     }
   };
