@@ -10,13 +10,16 @@ const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 export interface Movie {
   id: number;
-  title: string;
+  title?: string;
+  name?: string;
   overview: string;
   poster_path: string | null;
   backdrop_path: string | null;
-  release_date: string;
+  release_date?: string;
+  first_air_date?: string;
   vote_average: number;
   genre_ids: number[];
+  media_type?: 'movie' | 'tv';
   runtime?: number;
   cast?: Array<{ name: string; character: string }>;
 }
@@ -138,13 +141,23 @@ export const useMovies = () => {
       return false;
     }
 
+    const movieTitle = movie.title || movie.name || '';
+    if (!movieTitle) {
+      toast({
+        title: "Erro",
+        description: "Título do filme não encontrado",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       // Check if movie already exists in user's list
       const { data: existing } = await supabase
         .from('filmesadicionados')
         .select('idfilmeadicionado')
         .eq('idcliente', user.id)
-        .eq('nomefilme', movie.title)
+        .eq('nomefilme', movieTitle)
         .single();
 
       if (existing) {
@@ -161,14 +174,14 @@ export const useMovies = () => {
         .from('filmesadicionados')
         .insert({
           idcliente: user.id,
-          nomefilme: movie.title
+          nomefilme: movieTitle
         });
 
       if (error) throw error;
 
       toast({
         title: "Sucesso",
-        description: `"${movie.title}" foi adicionado à sua lista`,
+        description: `"${movieTitle}" foi adicionado à sua lista`,
       });
 
       // Refresh user's movie list

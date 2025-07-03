@@ -8,85 +8,85 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Netflix-inspired dark theme */
-    --background: 0 0% 8%;
-    --foreground: 0 0% 95%;
+    /* MovieFlow dark blue theme */
+    --background: 220 30% 5%;
+    --foreground: 220 15% 95%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
+    --card: 220 25% 8%;
+    --card-foreground: 220 15% 95%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 220 25% 8%;
+    --popover-foreground: 220 15% 95%;
 
-    /* Netflix red as primary */
-    --primary: 358 100% 50%;
+    /* Deep blue as primary */
+    --primary: 220 100% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 16%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 220 20% 12%;
+    --secondary-foreground: 220 15% 95%;
 
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 220 20% 12%;
+    --muted-foreground: 220 10% 65%;
 
-    --accent: 0 0% 16%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 220 25% 15%;
+    --accent-foreground: 220 15% 95%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 95%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 16%;
-    --ring: 358 100% 50%;
+    --border: 220 15% 18%;
+    --input: 220 20% 12%;
+    --ring: 220 100% 60%;
 
     --radius: 0.5rem;
 
     /* Movie card specific colors */
-    --movie-card: 0 0% 14%;
-    --movie-card-hover: 0 0% 18%;
+    --movie-card: 220 25% 10%;
+    --movie-card-hover: 220 25% 15%;
     
     /* Gradients for hero sections */
-    --gradient-hero: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%);
-    --gradient-card: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+    --gradient-hero: linear-gradient(180deg, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0.4) 50%, rgba(15,23,42,0.8) 100%);
+    --gradient-card: linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.8) 100%);
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 358 100% 50%;
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 220 15% 95%;
+    --sidebar-primary: 220 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 16%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 358 100% 50%;
+    --sidebar-accent: 220 20% 12%;
+    --sidebar-accent-foreground: 220 15% 95%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 220 100% 60%;
   }
 
   .dark {
     /* Same as root - we're going full dark mode */
-    --background: 0 0% 8%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 358 100% 50%;
+    --background: 220 30% 5%;
+    --foreground: 220 15% 95%;
+    --card: 220 25% 8%;
+    --card-foreground: 220 15% 95%;
+    --popover: 220 25% 8%;
+    --popover-foreground: 220 15% 95%;
+    --primary: 220 100% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 16%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 16%;
-    --accent-foreground: 0 0% 95%;
+    --secondary: 220 20% 12%;
+    --secondary-foreground: 220 15% 95%;
+    --muted: 220 20% 12%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 220 25% 15%;
+    --accent-foreground: 220 15% 95%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 95%;
-    --border: 0 0% 20%;
-    --input: 0 0% 16%;
-    --ring: 358 100% 50%;
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 358 100% 50%;
+    --border: 220 15% 18%;
+    --input: 220 20% 12%;
+    --ring: 220 100% 60%;
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 220 15% 95%;
+    --sidebar-primary: 220 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 16%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 358 100% 50%;
+    --sidebar-accent: 220 20% 12%;
+    --sidebar-accent-foreground: 220 15% 95%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 220 100% 60%;
   }
 }
 

@@ -1,171 +1,175 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Movie, useMovies } from '@/hooks/useMovies';
-import { Navbar } from '@/components/Navbar';
-import { MovieCard } from '@/components/MovieCard';
+import { Movie, useTMDB, MovieSection } from '@/hooks/useTMDB';
+import { MovieFlowHeader } from '@/components/MovieFlowHeader';
+import { HeroSection } from '@/components/HeroSection';
+import { MovieRow } from '@/components/MovieRow';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const { user } = useAuth();
-  const { getPopularMovies, searchMovies, TMDB_IMAGE_BASE_URL } = useMovies();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentCategory, setCurrentCategory] = useState<'all' | 'movies' | 'series'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const { getHomeList, searchMovies, getMoviesByGenre, loading } = useTMDB();
+  const [movieSections, setMovieSections] = useState<MovieSection[]>([]);
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     loadInitialContent();
   }, []);
 
   const loadInitialContent = async () => {
-    setLoading(true);
     try {
-      const popularMovies = await getPopularMovies();
-      setMovies(popularMovies);
-      if (popularMovies.length > 0) {
-        setFeaturedMovie(popularMovies[0]);
+      const sections = await getHomeList();
+      setMovieSections(sections);
+      
+      // Set featured movie from trending section
+      const trendingSection = sections.find(s => s.slug === 'trending');
+      if (trendingSection && trendingSection.items.length > 0) {
+        setFeaturedMovie(trendingSection.items[0]);
       }
     } catch (error) {
       console.error('Error loading content:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
-      loadInitialContent();
       setSearchQuery('');
+      setSearchResults([]);
+      setIsSearching(false);
       return;
     }
 
-    setLoading(true);
     setSearchQuery(query);
+    setIsSearching(true);
+    
     try {
-      const searchResults = await searchMovies(query);
-      setMovies(searchResults);
-      setFeaturedMovie(null);
+      const results = await searchMovies(query);
+      setSearchResults(results);
     } catch (error) {
       console.error('Error searching movies:', error);
-    } finally {
-      setLoading(false);
+      setSearchResults([]);
     }
   };
 
-  const handleCategoryChange = (category: 'all' | 'movies' | 'series') => {
-    setCurrentCategory(category);
-    if (category === 'all') {
-      loadInitialContent();
+  const handleGenreSelect = async (genreId: number, type: 'movie' | 'tv') => {
+    try {
+      const movies = await getMoviesByGenre(genreId, type);
+      setSearchResults(movies);
+      setSearchQuery(`Filmes de ${type === 'movie' ? 'cinema' : 'TV'}`);
+      setIsSearching(true);
+    } catch (error) {
+      console.error('Error loading genre movies:', error);
     }
-    // Note: For now, we'll treat 'movies' and 'series' the same since TMDb separates them
-    // In a real implementation, you'd make different API calls for TV shows vs movies
   };
-
-  const backdropUrl = featuredMovie?.backdrop_path 
-    ? `${TMDB_IMAGE_BASE_URL.replace('w500', 'w1280')}${featuredMovie.backdrop_path}`
-    : null;
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar 
+      <MovieFlowHeader 
         onSearch={handleSearch}
-        onCategoryChange={handleCategoryChange}
-        currentCategory={currentCategory}
+        onGenreSelect={handleGenreSelect}
       />
 
-      {/* Hero Section */}
-      {featuredMovie && !searchQuery && (
-        <div className="relative h-[70vh] overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ 
-              backgroundImage: backdropUrl ? `url(${backdropUrl})` : 'none',
-              backgroundColor: backdropUrl ? 'transparent' : 'hsl(var(--muted))'
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
-          <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
-            <div className="max-w-2xl space-y-6">
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground">
-                {featuredMovie.title}
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground line-clamp-3">
-                {featuredMovie.overview}
-              </p>
-              <div className="flex space-x-4">
-                <Button size="lg" className="text-lg px-8">
-                  ▶ Assistir
-                </Button>
-                <Button size="lg" variant="secondary" className="text-lg px-8">
-                  Mais Informações
+      {/* Main Content */}
+      <main className="pt-20">
+        {/* Hero Section - only show when not searching */}
+        {!isSearching && featuredMovie && (
+          <HeroSection featuredMovie={featuredMovie} />
+        )}
+
+        {/* Content Section */}
+        <div className={`${!isSearching && featuredMovie ? 'py-8' : 'pt-8 pb-8'}`}>
+          {isSearching ? (
+            /* Search Results */
+            <div className="container mx-auto px-4">
+              <div className="mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">
+                  {searchQuery ? `Resultados para "${searchQuery}"` : 'Resultados da pesquisa'}
+                </h2>
+                <p className="text-muted-foreground">
+                  {searchResults.length} {searchResults.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
+                </p>
+              </div>
+
+              {searchResults.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {searchResults.map((movie) => (
+                    <div
+                      key={movie.id}
+                      className="flex-shrink-0 w-full cursor-pointer group"
+                    >
+                      <div className="relative">
+                        <img
+                          src={movie.poster_path 
+                            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                            : '/placeholder.svg'
+                          }
+                          alt={movie.title || movie.name || ''}
+                          className="w-full h-72 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      </div>
+                      
+                      <h3 className="mt-2 text-sm font-medium line-clamp-2">
+                        {movie.title || movie.name || ''}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between mt-1 text-xs text-muted-foreground">
+                        <span>⭐ {movie.vote_average?.toFixed(1)}</span>
+                        <span>
+                          {movie.release_date 
+                            ? new Date(movie.release_date).getFullYear()
+                            : movie.first_air_date 
+                            ? new Date(movie.first_air_date).getFullYear()
+                            : ''
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-xl text-muted-foreground mb-4">
+                    Nenhum resultado encontrado
+                  </p>
+                  <Button onClick={() => handleSearch('')}>
+                    Ver Filmes Populares
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Movie Sections */
+            <div className="container mx-auto px-4">
+              {movieSections.map((section) => (
+                <MovieRow
+                  key={section.slug}
+                  title={section.title}
+                  movies={section.items}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Authentication Prompt for Non-Logged Users */}
+          {!user && !isSearching && (
+            <div className="container mx-auto px-4 mt-16">
+              <div className="text-center py-12 bg-card rounded-lg">
+                <h3 className="text-2xl font-bold mb-4">Crie a sua lista personalizada</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Faça login para adicionar filmes à sua lista e ter uma experiência personalizada
+                </p>
+                <Button size="lg" onClick={() => window.location.href = '/auth'}>
+                  Criar Conta Grátis
                 </Button>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Content Section */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Section Title */}
-        <div className="mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
-            {searchQuery ? `Resultados para "${searchQuery}"` : 'Filmes Populares'}
-          </h2>
-          <p className="text-muted-foreground">
-            {searchQuery ? `${movies.length} filmes encontrados` : 'Os filmes mais populares do momento'}
-          </p>
-        </div>
-
-        {/* Movies Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {Array.from({ length: 12 }).map((_, index) => (
-              <div key={index} className="space-y-3">
-                <Skeleton className="aspect-[2/3] w-full rounded-lg" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-            ))}
-          </div>
-        ) : movies.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {movies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-xl text-muted-foreground mb-4">
-              {searchQuery ? 'Nenhum filme encontrado' : 'Erro ao carregar filmes'}
-            </p>
-            {searchQuery ? (
-              <Button onClick={() => handleSearch('')}>
-                Ver Filmes Populares
-              </Button>
-            ) : (
-              <Button onClick={loadInitialContent}>
-                Tentar Novamente
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Authentication Prompt for Non-Logged Users */}
-        {!user && (
-          <div className="mt-16 text-center py-12 bg-card rounded-lg">
-            <h3 className="text-2xl font-bold mb-4">Crie a sua lista personalizada</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Faça login para adicionar filmes à sua lista e ter uma experiência personalizada
-            </p>
-            <Button size="lg" onClick={() => window.location.href = '/auth'}>
-              Criar Conta Grátis
-            </Button>
-          </div>
-        )}
-      </div>
+      </main>
     </div>
   );
 };
