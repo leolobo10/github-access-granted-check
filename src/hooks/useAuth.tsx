@@ -58,6 +58,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Login error:', error);
+        
+        // Se login falhou com credenciais inválidas, tentar corrigir automaticamente
+        if (error.message.includes('Invalid login credentials')) {
+          console.log('Attempting auto-fix for user:', email);
+          
+          try {
+            // Chamar função de correção
+            const { data: fixData, error: fixError } = await supabase.functions.invoke('fix-auth', {
+              body: { email, password }
+            });
+
+            if (!fixError && fixData?.success) {
+              console.log('Auto-fix successful, retrying login...');
+              
+              // Tentar login novamente após correção
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+
+              if (!retryError) {
+                console.log('Login successful after auto-fix');
+                return { error: null };
+              }
+            }
+          } catch (autoFixError) {
+            console.error('Auto-fix failed:', autoFixError);
+          }
+        }
+        
         if (error.message.includes('Invalid login credentials')) {
           return { error: 'Email ou senha incorretos' };
         }
