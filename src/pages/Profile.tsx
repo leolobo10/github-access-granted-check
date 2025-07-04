@@ -294,7 +294,7 @@ export default function Profile() {
                     type="tel"
                     value={profile.telefone}
                     onChange={(e) => setProfile(prev => ({ ...prev, telefone: formatPhoneNumber(e.target.value) }))}
-                    placeholder="(opcional)"
+                    required
                   />
                 </div>
 

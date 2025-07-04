@@ -173,12 +173,13 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone (opcional)</Label>
+                  <Label htmlFor="telefone">Telefone</Label>
                   <Input
                     id="telefone"
                     type="tel"
                     value={formData.telefone}
                     onChange={(e) => handleInputChange('telefone', e.target.value)}
+                    required
                   />
                 </div>
 
