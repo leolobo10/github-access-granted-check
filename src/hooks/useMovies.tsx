@@ -39,13 +39,28 @@ export const useMovies = () => {
 
   // Fetch user's movie list
   const fetchUserMovies = async () => {
-    if (!user) return;
+    console.log('🎬 fetchUserMovies called');
+    console.log('🎬 User and session status:', { 
+      hasUser: !!user, 
+      hasSession: !!session,
+      userEmail: user?.email 
+    });
+    
+    if (!user || !session) {
+      console.log('🎬 No user or session, skipping fetch');
+      return;
+    }
 
     try {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke('movie-list', {
-        body: { action: 'list' }
+        body: { action: 'list' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
+
+      console.log('🎬 fetchUserMovies response:', { data, error });
 
       if (error) {
         console.error('Edge function error:', error);
@@ -70,10 +85,10 @@ export const useMovies = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && session) {
       fetchUserMovies();
     }
-  }, [user]);
+  }, [user, session]);
 
   // Search movies from TMDb
   const searchMovies = async (query: string): Promise<Movie[]> => {
