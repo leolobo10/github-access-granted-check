@@ -13,8 +13,13 @@ serve(async (req) => {
   }
 
   try {
+    console.log('movie-list function called with method:', req.method)
+    
     const authHeader = req.headers.get('Authorization')
+    console.log('Auth header present:', !!authHeader)
+    
     if (!authHeader) {
+      console.error('Missing authorization header')
       throw new Error('Token de autorização necessário')
     }
 
@@ -25,10 +30,20 @@ serve(async (req) => {
     )
 
     // Get user from JWT token
+    console.log('Getting user from auth...')
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
+    
+    if (userError) {
+      console.error('User error:', userError)
+      throw new Error('Erro de autenticação: ' + userError.message)
+    }
+    
+    if (!user) {
+      console.error('No user found')
       throw new Error('Utilizador não autenticado')
     }
+    
+    console.log('User authenticated:', user.id)
 
     const { action, movieData } = await req.json()
 
