@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Plus, Check, Info } from 'lucide-react';
+import { Play, Plus, Check, Info, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie, useTMDB } from '@/hooks/useTMDB';
 import { useMovies } from '@/hooks/useMovies';
@@ -147,7 +147,15 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
       {showTrailer && trailerUrl && (
         <div className="relative bg-background py-8">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -top-2 right-0 z-10 bg-background/80 hover:bg-background/90"
+                onClick={() => setShowTrailer(false)}
+              >
+                <X className="h-6 w-6" />
+              </Button>
               <div className="relative w-full h-0 pb-[56.25%]">
                 <iframe
                   src={trailerUrl}

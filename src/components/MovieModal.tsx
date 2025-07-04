@@ -167,15 +167,25 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
           {/* Trailer Section */}
           {showTrailer && trailerUrl && (
             <div className="px-6 pb-6">
-              <div className="relative w-full h-0 pb-[56.25%]">
-                <iframe
-                  src={trailerUrl}
-                  title="Movie Trailer"
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
-                  frameBorder="0"
-                  allowFullScreen
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                />
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute -top-2 right-0 z-10 bg-background/80 hover:bg-background/90"
+                  onClick={() => setShowTrailer(false)}
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+                <div className="relative w-full h-0 pb-[56.25%]">
+                  <iframe
+                    src={trailerUrl}
+                    title="Movie Trailer"
+                    className="absolute top-0 left-0 w-full h-full rounded-lg"
+                    frameBorder="0"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
               </div>
             </div>
           )}
