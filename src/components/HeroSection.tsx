@@ -32,6 +32,7 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
   };
 
   const handleAddToList = async () => {
+    console.log('🚀 HeroSection handleAddToList called');
     if (!featuredMovie) return;
     await addMovieToList(featuredMovie);
   };
