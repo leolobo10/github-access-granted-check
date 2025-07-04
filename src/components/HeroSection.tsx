@@ -139,37 +139,35 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
                 </Button>
               )}
             </div>
+
+            {/* Trailer Section - Moved here to appear right below buttons */}
+            {showTrailer && trailerUrl && (
+              <div className="mt-8 animate-fade-in">
+                <div className="max-w-4xl relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute -top-2 right-0 z-10 bg-background/80 hover:bg-background/90"
+                    onClick={() => setShowTrailer(false)}
+                  >
+                    <X className="h-6 w-6" />
+                  </Button>
+                  <div className="relative w-full h-0 pb-[56.25%]">
+                    <iframe
+                      src={trailerUrl}
+                      title="Movie Trailer"
+                      className="absolute top-0 left-0 w-full h-full rounded-lg"
+                      frameBorder="0"
+                      allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Trailer Section */}
-      {showTrailer && trailerUrl && (
-        <div className="relative bg-background py-8">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute -top-2 right-0 z-10 bg-background/80 hover:bg-background/90"
-                onClick={() => setShowTrailer(false)}
-              >
-                <X className="h-6 w-6" />
-              </Button>
-              <div className="relative w-full h-0 pb-[56.25%]">
-                <iframe
-                  src={trailerUrl}
-                  title="Movie Trailer"
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
-                  frameBorder="0"
-                  allowFullScreen
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Movie Modal */}
       {showModal && (
