@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Check, Play } from 'lucide-react';
 import { Movie, useMovies } from '@/hooks/useMovies';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,7 @@ interface MovieCardProps {
 }
 
 export const MovieCard = ({ movie }: MovieCardProps) => {
+  const { user } = useAuth();
   const [showDetails, setShowDetails] = useState(false);
   const { addMovieToList, isMovieInList, TMDB_IMAGE_BASE_URL } = useMovies();
 
@@ -63,31 +65,33 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
                 </div>
 
                 <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant={inList ? "secondary" : "default"}
-                    onClick={handleAddToList}
-                    disabled={inList}
-                    className="flex-1 text-xs"
-                  >
-                    {inList ? (
-                      <>
-                        <Check className="h-3 w-3 mr-1" />
-                        Na Lista
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-3 w-3 mr-1" />
-                        Adicionar
-                      </>
-                    )}
-                  </Button>
+                  {user && (
+                    <Button
+                      size="sm"
+                      variant={inList ? "secondary" : "default"}
+                      onClick={handleAddToList}
+                      disabled={inList}
+                      className="flex-1 text-xs"
+                    >
+                      {inList ? (
+                        <>
+                          <Check className="h-3 w-3 mr-1" />
+                          Na Lista
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-3 w-3 mr-1" />
+                          Adicionar
+                        </>
+                      )}
+                    </Button>
+                  )}
                   
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setShowDetails(true)}
-                    className="text-xs"
+                    className={`text-xs ${!user ? 'flex-1' : ''}`}
                   >
                     <Play className="h-3 w-3" />
                   </Button>
