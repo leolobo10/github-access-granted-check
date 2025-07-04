@@ -204,6 +204,7 @@ export const useMovies = () => {
       });
 
       console.log('🎬 Function response:', { data, error });
+      console.log('🎬 Full response data:', JSON.stringify(data, null, 2));
 
       if (error) {
         console.error('Edge function error:', error);
