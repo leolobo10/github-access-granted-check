@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Check, Eye } from 'lucide-react';
+import { Plus, Check, Play } from 'lucide-react';
 import { Movie, useMovies } from '@/hooks/useMovies';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -89,7 +89,7 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
                     onClick={() => setShowDetails(true)}
                     className="text-xs"
                   >
-                    <Eye className="h-3 w-3" />
+                    <Play className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
