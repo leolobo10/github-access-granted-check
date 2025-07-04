@@ -77,6 +77,23 @@ export default function Profile() {
     }
   };
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove todos os caracteres não numéricos
+    const numbers = value.replace(/\D/g, '');
+    
+    // Limita a 9 dígitos
+    const limitedNumbers = numbers.slice(0, 9);
+    
+    // Formata: 123 456 789
+    if (limitedNumbers.length <= 3) {
+      return limitedNumbers;
+    } else if (limitedNumbers.length <= 6) {
+      return `${limitedNumbers.slice(0, 3)} ${limitedNumbers.slice(3)}`;
+    } else {
+      return `${limitedNumbers.slice(0, 3)} ${limitedNumbers.slice(3, 6)} ${limitedNumbers.slice(6)}`;
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -276,7 +293,7 @@ export default function Profile() {
                     id="telefone"
                     type="tel"
                     value={profile.telefone}
-                    onChange={(e) => setProfile(prev => ({ ...prev, telefone: e.target.value }))}
+                    onChange={(e) => setProfile(prev => ({ ...prev, telefone: formatPhoneNumber(e.target.value) }))}
                     placeholder="(opcional)"
                   />
                 </div>

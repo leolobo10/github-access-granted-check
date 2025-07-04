@@ -78,8 +78,30 @@ export default function Auth() {
     }
   };
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove todos os caracteres não numéricos
+    const numbers = value.replace(/\D/g, '');
+    
+    // Limita a 9 dígitos
+    const limitedNumbers = numbers.slice(0, 9);
+    
+    // Formata: 123 456 789
+    if (limitedNumbers.length <= 3) {
+      return limitedNumbers;
+    } else if (limitedNumbers.length <= 6) {
+      return `${limitedNumbers.slice(0, 3)} ${limitedNumbers.slice(3)}`;
+    } else {
+      return `${limitedNumbers.slice(0, 3)} ${limitedNumbers.slice(3, 6)} ${limitedNumbers.slice(6)}`;
+    }
+  };
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'telefone') {
+      const formattedPhone = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [field]: formattedPhone }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
 
