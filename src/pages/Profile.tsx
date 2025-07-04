@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { Key } from 'lucide-react';
 
 interface UserProfile {
   nome: string;
@@ -20,11 +21,17 @@ export default function Profile() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     nome: '',
     email: '',
     telefone: '',
     endereco: ''
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
   useEffect(() => {
@@ -99,6 +106,57 @@ export default function Profile() {
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A nova senha deve ter pelo menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Senha alterada com sucesso!",
+      });
+    } catch (error: any) {
+      console.error('Erro ao alterar senha:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao alterar senha",
+        variant: "destructive",
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
@@ -121,7 +179,8 @@ export default function Profile() {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Perfil do Usuário */}
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Perfil do Usuário</CardTitle>
@@ -193,19 +252,66 @@ export default function Profile() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
 
-              <div className="mt-8 pt-6 border-t">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-semibold">Sair da conta</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Fazer logout da sua conta
-                    </p>
-                  </div>
-                  <Button variant="destructive" onClick={handleSignOut}>
-                    Sair
-                  </Button>
+          {/* Alteração de Senha */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Alterar Senha
+              </CardTitle>
+              <CardDescription>
+                Altere sua senha de acesso à conta
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdatePassword} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">Nova Senha</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    placeholder="Digite a nova senha"
+                    required
+                  />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    placeholder="Confirme a nova senha"
+                    required
+                  />
+                </div>
+
+                <Button type="submit" disabled={passwordLoading} className="w-full">
+                  {passwordLoading ? 'A alterar senha...' : 'Alterar Senha'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Sair da Conta */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-semibold">Sair da conta</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Fazer logout da sua conta
+                  </p>
+                </div>
+                <Button variant="destructive" onClick={handleSignOut}>
+                  Sair
+                </Button>
               </div>
             </CardContent>
           </Card>
