@@ -81,16 +81,6 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto p-0">
         <div className="relative">
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 z-50 bg-background/80 hover:bg-background/90"
-            onClick={onClose}
-          >
-            <X className="h-6 w-6" />
-          </Button>
-
           {/* Hero Section */}
           <div className="relative h-96 overflow-hidden">
             <img
