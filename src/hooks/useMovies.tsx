@@ -54,9 +54,9 @@ export const useMovies = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke('movie-list', {
-        body: { action: 'list' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
+        body: { 
+          action: 'list',
+          userId: user.id 
         }
       });
 
@@ -196,10 +196,8 @@ export const useMovies = () => {
       const { data, error } = await supabase.functions.invoke('movie-list', {
         body: { 
           action: 'add', 
-          movieData: { ...movie, title: movieTitle } 
-        },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
+          movieData: { ...movie, title: movieTitle },
+          userId: user.id
         }
       });
 
@@ -276,7 +274,8 @@ export const useMovies = () => {
       const { data, error } = await supabase.functions.invoke('movie-list', {
         body: { 
           action: 'remove', 
-          movieData: { movieId } 
+          movieData: { movieId },
+          userId: user.id
         }
       });
 

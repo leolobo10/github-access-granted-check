@@ -18,140 +18,176 @@ serve(async (req) => {
   try {
     console.log('Processing request...')
     
-    // Verificar se existe header de autorização
-    const authHeader = req.headers.get('Authorization')
-    console.log('Auth header present:', !!authHeader)
-    console.log('Auth header value:', authHeader ? authHeader.substring(0, 20) + '...' : 'null')
-    console.log('All headers:', JSON.stringify(Object.fromEntries(req.headers.entries())))
+    // Usar service role key para evitar problemas de JWT
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const requestBody = await req.json()
+    console.log('Request body:', JSON.stringify(requestBody))
     
-    if (!authHeader) {
-      console.error('Missing authorization header')
+    const { action, movieData, userId } = requestBody
+
+    // Verificar se o userId foi fornecido
+    if (!userId) {
       return new Response(
         JSON.stringify({ 
-          error: 'Token de autorização necessário',
-          success: false,
-          debug: 'noAuthHeader'
+          error: 'ID do utilizador é obrigatório',
+          success: false 
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Testar criação do cliente Supabase
-    let supabase;
-    try {
-      // Extrair o token do header Authorization
-      const token = authHeader.replace('Bearer ', '');
-      console.log('Extracted token length:', token.length);
+    if (action === 'add') {
+      console.log('Processing add action...')
+      const movieTitle = movieData.title || movieData.name || ''
+      console.log('Movie title:', movieTitle)
       
-      supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        { 
-          global: { 
-            headers: { 
-              Authorization: `Bearer ${token}` 
-            } 
-          },
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      )
-      console.log('Supabase client created with token')
-    } catch (e) {
-      console.error('Error creating supabase client:', e)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Erro ao criar cliente Supabase: ' + e.message,
-          success: false,
-          debug: 'supabaseClientError'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Verificar autenticação
-    let user;
-    try {
-      console.log('Getting user from auth...')
-      const { data: authData, error: userError } = await supabase.auth.getUser()
-      
-      console.log('Full auth response:', JSON.stringify({
-        data: authData,
-        error: userError
-      }, null, 2))
-      
-      if (userError) {
-        console.error('User error details:', userError)
+      if (!movieTitle) {
         return new Response(
           JSON.stringify({ 
-            error: 'Erro específico: ' + JSON.stringify(userError),
-            success: false,
-            debug: 'userError',
-            fullError: userError
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-      
-      if (!authData?.user) {
-        console.error('No user in auth data')
-        return new Response(
-          JSON.stringify({ 
-            error: 'Nenhum utilizador encontrado nos dados de autenticação',
-            success: false,
-            debug: 'noUserInData',
-            authData: authData
+            error: 'Título do filme é obrigatório',
+            success: false 
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      user = authData.user;
-      console.log('User authenticated successfully:', user.id)
-    } catch (e) {
-      console.error('Exception during auth:', e)
+      // Check if movie already exists in user's list
+      console.log('Checking if movie exists in list...')
+      const { data: existing, error: checkError } = await supabase
+        .from('filmesadicionados')
+        .select('idfilmeadicionado')
+        .eq('idcliente', userId)
+        .eq('nomefilme', movieTitle)
+        .maybeSingle()
+
+      if (checkError) {
+        console.error('Erro ao verificar filme existente:', checkError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Erro ao verificar lista: ' + checkError.message,
+            success: false 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (existing) {
+        console.log('Movie already exists in list')
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Este filme já está na sua lista' 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Add movie to user's list
+      console.log('Adding movie to list...')
+      const { error: insertError } = await supabase
+        .from('filmesadicionados')
+        .insert({
+          idcliente: userId,
+          nomefilme: movieTitle
+        })
+
+      if (insertError) {
+        console.error('Erro ao adicionar filme:', insertError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Erro ao adicionar filme à lista: ' + insertError.message,
+            success: false 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log('Movie added successfully')
       return new Response(
         JSON.stringify({ 
-          error: 'Excepção durante autenticação: ' + e.message,
-          success: false,
-          debug: 'authException',
-          stack: e.stack
+          success: true, 
+          message: `"${movieTitle}" foi adicionado à sua lista` 
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Processar body da requisição
-    let requestBody;
-    try {
-      requestBody = await req.json()
-      console.log('Request body:', JSON.stringify(requestBody))
-    } catch (e) {
-      console.error('Error parsing request body:', e)
+    if (action === 'remove') {
+      console.log('Processing remove action...')
+      const { movieId } = movieData
+
+      if (!movieId) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'ID do filme é obrigatório',
+            success: false 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const { error: deleteError } = await supabase
+        .from('filmesadicionados')
+        .delete()
+        .eq('idfilmeadicionado', movieId)
+        .eq('idcliente', userId)
+
+      if (deleteError) {
+        console.error('Erro ao remover filme:', deleteError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Erro ao remover filme da lista: ' + deleteError.message,
+            success: false 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       return new Response(
         JSON.stringify({ 
-          error: 'Erro ao processar corpo da requisição: ' + e.message,
-          success: false,
-          debug: 'bodyParseError'
+          success: true, 
+          message: 'Filme removido da sua lista' 
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const { action, movieData } = requestBody
+    if (action === 'list') {
+      console.log('Processing list action...')
+      const { data: userMovies, error: listError } = await supabase
+        .from('filmesadicionados')
+        .select('*')
+        .eq('idcliente', userId)
+        .order('dataadicionado', { ascending: false })
 
-    // Se chegou até aqui, tudo está funcionando
+      if (listError) {
+        console.error('Erro ao buscar lista:', listError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Erro ao carregar lista de filmes: ' + listError.message,
+            success: false 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          movies: userMovies || [] 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: 'Autenticação e setup funcionando',
-        debug: {
-          userId: user.id,
-          action: action,
-          movieTitle: movieData?.title || movieData?.name
-        }
+        error: 'Ação inválida',
+        success: false 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
