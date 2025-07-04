@@ -59,44 +59,49 @@ serve(async (req) => {
     let user;
     try {
       console.log('Getting user from auth...')
-      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+      const { data: authData, error: userError } = await supabase.auth.getUser()
       
-      console.log('Auth response:', { user: authUser?.id, error: userError })
+      console.log('Full auth response:', JSON.stringify({
+        data: authData,
+        error: userError
+      }, null, 2))
       
       if (userError) {
-        console.error('User error:', userError)
+        console.error('User error details:', userError)
         return new Response(
           JSON.stringify({ 
-            error: 'Erro de autenticação: ' + userError.message,
+            error: 'Erro específico: ' + JSON.stringify(userError),
             success: false,
             debug: 'userError',
-            details: userError
+            fullError: userError
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
       
-      if (!authUser) {
-        console.error('No user found')
+      if (!authData?.user) {
+        console.error('No user in auth data')
         return new Response(
           JSON.stringify({ 
-            error: 'Utilizador não autenticado',
+            error: 'Nenhum utilizador encontrado nos dados de autenticação',
             success: false,
-            debug: 'noUser'
+            debug: 'noUserInData',
+            authData: authData
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      user = authUser;
-      console.log('User authenticated:', user.id)
+      user = authData.user;
+      console.log('User authenticated successfully:', user.id)
     } catch (e) {
-      console.error('Error during auth:', e)
+      console.error('Exception during auth:', e)
       return new Response(
         JSON.stringify({ 
-          error: 'Erro durante autenticação: ' + e.message,
+          error: 'Excepção durante autenticação: ' + e.message,
           success: false,
-          debug: 'authException'
+          debug: 'authException',
+          stack: e.stack
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
