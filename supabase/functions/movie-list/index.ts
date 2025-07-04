@@ -39,12 +39,26 @@ serve(async (req) => {
     // Testar criação do cliente Supabase
     let supabase;
     try {
+      // Extrair o token do header Authorization
+      const token = authHeader.replace('Bearer ', '');
+      console.log('Extracted token length:', token.length);
+      
       supabase = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        { global: { headers: { Authorization: authHeader } } }
+        { 
+          global: { 
+            headers: { 
+              Authorization: `Bearer ${token}` 
+            } 
+          },
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
       )
-      console.log('Supabase client created')
+      console.log('Supabase client created with token')
     } catch (e) {
       console.error('Error creating supabase client:', e)
       return new Response(
