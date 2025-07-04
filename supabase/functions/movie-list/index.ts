@@ -42,12 +42,15 @@ serve(async (req) => {
     console.log('Getting user from auth...')
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
+    console.log('Auth response:', { user: user?.id, error: userError })
+    
     if (userError) {
       console.error('User error:', userError)
       return new Response(
         JSON.stringify({ 
           error: 'Erro de autenticação: ' + userError.message,
-          success: false 
+          success: false,
+          debug: 'userError'
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -58,7 +61,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Utilizador não autenticado',
-          success: false 
+          success: false,
+          debug: 'noUser'
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
