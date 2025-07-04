@@ -165,11 +165,20 @@ export const useMovies = () => {
         action: 'add', 
         movieData: { ...movie, title: movieTitle } 
       });
+      
+      console.log('🎬 Session details:', {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        userEmail: user?.email
+      });
 
       const { data, error } = await supabase.functions.invoke('movie-list', {
         body: { 
           action: 'add', 
           movieData: { ...movie, title: movieTitle } 
+        },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
         }
       });
 
