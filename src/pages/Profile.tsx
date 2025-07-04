@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { Key, Eye, EyeOff } from 'lucide-react';
+import { Key, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 interface UserProfile {
   nome: string;
@@ -22,6 +23,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
@@ -166,6 +168,53 @@ export default function Profile() {
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    setDeleteLoading(true);
+    try {
+      // Primeiro deletar dados da tabela cliente
+      const { error: clienteError } = await supabase
+        .from('cliente')
+        .delete()
+        .eq('idcliente', user.id);
+
+      if (clienteError) {
+        console.error('Erro ao deletar dados do cliente:', clienteError);
+        // Continua mesmo se houver erro na tabela cliente
+      }
+
+      // Deletar filmes adicionados do utilizador  
+      const { error: filmesError } = await supabase
+        .from('filmesadicionados')
+        .delete()
+        .eq('idcliente', user.id);
+
+      if (filmesError) {
+        console.error('Erro ao deletar filmes:', filmesError);
+        // Continua mesmo se houver erro
+      }
+
+      toast({
+        title: "Dados removidos",
+        description: "Seus dados foram removidos com sucesso. Entre em contato conosco para completar a remoção da conta.",
+      });
+
+      // Fazer logout e redirecionar
+      await signOut();
+      navigate('/auth');
+    } catch (error: any) {
+      console.error('Erro ao apagar conta:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao apagar conta. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleSearch = () => {
@@ -356,6 +405,54 @@ export default function Profile() {
                 <Button variant="destructive" onClick={handleSignOut}>
                   Sair
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Apagar Conta */}
+          <Card className="border-destructive/50">
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-semibold text-destructive flex items-center gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Apagar conta
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente removidos.
+                  </p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={deleteLoading}>
+                      {deleteLoading ? 'A apagar...' : 'Apagar Conta'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Tem a certeza?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isto irá apagar permanentemente a sua conta
+                        e remover todos os seus dados dos nossos servidores, incluindo:
+                        <br /><br />
+                        • Informações do perfil
+                        <br />
+                        • Lista de filmes guardados
+                        <br />
+                        • Histórico de atividade
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Sim, apagar conta
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
