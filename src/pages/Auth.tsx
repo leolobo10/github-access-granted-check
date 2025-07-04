@@ -53,6 +53,15 @@ export default function Auth() {
           return;
         }
 
+        if (!formData.telefone.trim()) {
+          toast({
+            title: "Erro",
+            description: "O telefone é obrigatório",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const { error } = await signUp(formData.email, formData.password, {
           nome: formData.nome,
           telefone: formData.telefone,
