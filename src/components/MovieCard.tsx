@@ -4,7 +4,7 @@ import { Movie, useMovies } from '@/hooks/useMovies';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MovieDetailsModal } from './MovieDetailsModal';
+import { MovieModal } from './MovieModal';
 
 interface MovieCardProps {
   movie: Movie;
@@ -98,10 +98,10 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
         </CardContent>
       </Card>
 
-      <MovieDetailsModal
+      <MovieModal
         movie={movie}
-        open={showDetails}
-        onOpenChange={setShowDetails}
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
       />
     </>
   );
