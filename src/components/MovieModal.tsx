@@ -110,7 +110,7 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
               </div>
 
               <div className="flex items-center space-x-4">
-                {trailerUrl ? (
+                {user && trailerUrl ? (
                   <Button
                     size="lg"
                     className="bg-white text-black hover:bg-white/90"
@@ -119,7 +119,7 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
                     <Play className="h-5 w-5 mr-2" />
                     {showTrailer ? 'Fechar Trailer' : 'Assistir Trailer'}
                   </Button>
-                ) : (
+                ) : user ? (
                   <Button
                     size="lg"
                     variant="secondary"
@@ -127,6 +127,15 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
                   >
                     <Play className="h-5 w-5 mr-2" />
                     Trailer não disponível
+                  </Button>
+                ) : (
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    onClick={() => window.location.href = '/auth'}
+                  >
+                    <Play className="h-5 w-5 mr-2" />
+                    Faça Login para Assistir
                   </Button>
                 )}
 

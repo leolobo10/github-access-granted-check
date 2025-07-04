@@ -87,7 +87,7 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              {trailerUrl ? (
+              {user && trailerUrl ? (
                 <Button
                   size="lg"
                   className="bg-white text-black hover:bg-white/90 text-lg px-8"
@@ -96,7 +96,7 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
                   <Play className="h-6 w-6 mr-2" />
                   {showTrailer ? 'Fechar Trailer' : 'Assistir Trailer'}
                 </Button>
-              ) : (
+              ) : user ? (
                 <Button
                   size="lg"
                   variant="secondary"
@@ -105,6 +105,16 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
                 >
                   <Play className="h-6 w-6 mr-2" />
                   Trailer não disponível
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  onClick={() => window.location.href = '/auth'}
+                  className="text-lg px-8"
+                >
+                  <Play className="h-6 w-6 mr-2" />
+                  Faça Login para Assistir
                 </Button>
               )}
 
