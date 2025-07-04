@@ -41,7 +41,7 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
       setMovieDetails(details || movie);
       setTrailerUrl(trailer);
     } catch (error) {
-      console.error('Error loading movie data:', error);
+      console.error('Erro ao carregar dados do filme:', error);
       setMovieDetails(movie);
     } finally {
       setLoading(false);
@@ -178,7 +178,7 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
                 <div className="relative w-full h-0 pb-[56.25%]">
                   <iframe
                     src={trailerUrl}
-                    title="Movie Trailer"
+                    title="Trailer do Filme"
                     className="absolute top-0 left-0 w-full h-full rounded-lg"
                     frameBorder="0"
                     allowFullScreen

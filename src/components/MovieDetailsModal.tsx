@@ -41,7 +41,7 @@ export const MovieDetailsModal = ({ movie, open, onOpenChange }: MovieDetailsMod
       const details = await getMovieDetails(movie.id);
       setMovieDetails(details);
     } catch (error) {
-      console.error('Error fetching movie details:', error);
+      console.error('Erro ao buscar detalhes do filme:', error);
     } finally {
       setLoading(false);
     }

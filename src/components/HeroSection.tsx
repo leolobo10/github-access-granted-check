@@ -33,7 +33,7 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
   };
 
   const handleAddToList = async () => {
-    console.log('🚀 HeroSection handleAddToList called');
+    console.log('🚀 HeroSection handleAddToList chamado');
     if (!featuredMovie) return;
     await addMovieToList(featuredMovie);
   };
@@ -165,7 +165,7 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
                   <div className="relative w-full h-0 pb-[56.25%]">
                     <iframe
                       src={trailerUrl}
-                      title="Movie Trailer"
+                      title="Trailer do Filme"
                       className="absolute top-0 left-0 w-full h-full rounded-lg"
                       frameBorder="0"
                       allowFullScreen

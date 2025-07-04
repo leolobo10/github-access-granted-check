@@ -146,7 +146,7 @@ export const useMovies = () => {
         cast: data.credits?.cast?.slice(0, 10) || []
       };
     } catch (error) {
-      console.error('Error fetching movie details:', error);
+      console.error('Erro ao buscar detalhes do filme:', error);
       return null;
     }
   };

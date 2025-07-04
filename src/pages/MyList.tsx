@@ -49,7 +49,7 @@ export default function MyList() {
             movieData
           };
         } catch (error) {
-          console.error('Error fetching movie details for:', userMovie.nomefilme);
+          console.error('Erro ao buscar detalhes do filme para:', userMovie.nomefilme);
           return userMovie;
         }
       })
