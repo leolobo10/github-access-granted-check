@@ -158,6 +158,11 @@ export const useMovies = () => {
     }
 
     try {
+      console.log('🎬 Calling movie-list function with:', { 
+        action: 'add', 
+        movieData: { ...movie, title: movieTitle } 
+      });
+
       const { data, error } = await supabase.functions.invoke('movie-list', {
         body: { 
           action: 'add', 
@@ -165,12 +170,33 @@ export const useMovies = () => {
         }
       });
 
+      console.log('🎬 Function response:', { data, error });
+
       if (error) {
         console.error('Edge function error:', error);
-        throw new Error(error.message || 'Erro ao adicionar filme');
+        
+        // Tentar obter mais detalhes do erro
+        let errorMessage = error.message || 'Erro ao adicionar filme';
+        if (error.context?.body) {
+          try {
+            const errorBody = JSON.parse(error.context.body);
+            errorMessage = errorBody.error || errorMessage;
+            console.log('Error details:', errorBody);
+          } catch (e) {
+            console.log('Could not parse error body:', error.context.body);
+          }
+        }
+        
+        toast({
+          title: "Erro Detalhado",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return false;
       }
 
       if (data?.error) {
+        console.log('Function returned error:', data.error);
         toast({
           title: "Erro",
           description: data.error,
