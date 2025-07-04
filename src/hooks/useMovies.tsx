@@ -139,9 +139,15 @@ export const useMovies = () => {
   // Add movie to user's list
   const addMovieToList = async (movie: Movie): Promise<boolean> => {
     console.log('🎬 addMovieToList called');
-    console.log('🎬 User status:', { user: user?.id, session: session?.access_token ? 'present' : 'missing' });
+    console.log('🎬 User status:', { 
+      hasUser: !!user, 
+      userEmail: user?.email,
+      hasSession: !!session,
+      hasAccessToken: !!session?.access_token 
+    });
     
     if (!user || !session) {
+      console.log('🎬 No user or session, redirecting to auth');
       toast({
         title: "Erro",
         description: "Precisa estar logado para adicionar filmes. Por favor, faça login novamente.",
