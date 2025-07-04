@@ -4,6 +4,7 @@ import { Movie, useTMDB, MovieSection } from '@/hooks/useTMDB';
 import { MovieFlowHeader } from '@/components/MovieFlowHeader';
 import { HeroSection } from '@/components/HeroSection';
 import { MovieRow } from '@/components/MovieRow';
+import { MovieCard } from '@/components/MovieCard';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -96,38 +97,7 @@ const Index = () => {
               {searchResults.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {searchResults.map((movie) => (
-                    <div
-                      key={movie.id}
-                      className="flex-shrink-0 w-full cursor-pointer group"
-                    >
-                      <div className="relative">
-                        <img
-                          src={movie.poster_path 
-                            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                            : '/placeholder.svg'
-                          }
-                          alt={movie.title || movie.name || ''}
-                          className="w-full h-72 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                      
-                      <h3 className="mt-2 text-sm font-medium line-clamp-2">
-                        {movie.title || movie.name || ''}
-                      </h3>
-                      
-                      <div className="flex items-center justify-between mt-1 text-xs text-muted-foreground">
-                        <span>⭐ {movie.vote_average?.toFixed(1)}</span>
-                        <span>
-                          {movie.release_date 
-                            ? new Date(movie.release_date).getFullYear()
-                            : movie.first_air_date 
-                            ? new Date(movie.first_air_date).getFullYear()
-                            : ''
-                          }
-                        </span>
-                      </div>
-                    </div>
+                    <MovieCard key={movie.id} movie={movie} />
                   ))}
                 </div>
               ) : (
