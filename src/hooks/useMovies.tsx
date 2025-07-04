@@ -33,7 +33,7 @@ export interface UserMovie {
 }
 
 export const useMovies = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [userMovies, setUserMovies] = useState<UserMovie[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -138,10 +138,13 @@ export const useMovies = () => {
 
   // Add movie to user's list
   const addMovieToList = async (movie: Movie): Promise<boolean> => {
-    if (!user) {
+    console.log('🎬 addMovieToList called');
+    console.log('🎬 User status:', { user: user?.id, session: session?.access_token ? 'present' : 'missing' });
+    
+    if (!user || !session) {
       toast({
         title: "Erro",
-        description: "Precisa estar logado para adicionar filmes",
+        description: "Precisa estar logado para adicionar filmes. Por favor, faça login novamente.",
         variant: "destructive",
       });
       return false;
