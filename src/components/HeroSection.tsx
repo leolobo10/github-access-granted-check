@@ -16,6 +16,7 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
   const { addMovieToList, isMovieInList } = useMovies();
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
     if (featuredMovie) {
@@ -90,10 +91,10 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
                 <Button
                   size="lg"
                   className="bg-white text-black hover:bg-white/90 text-lg px-8"
-                  onClick={() => window.open(trailerUrl, '_blank')}
+                  onClick={() => setShowTrailer(!showTrailer)}
                 >
                   <Play className="h-6 w-6 mr-2" />
-                  Assistir Trailer
+                  {showTrailer ? 'Fechar Trailer' : 'Assistir Trailer'}
                 </Button>
               ) : (
                 <Button
@@ -141,6 +142,26 @@ export const HeroSection = ({ featuredMovie }: HeroSectionProps) => {
           </div>
         </div>
       </div>
+
+      {/* Trailer Section */}
+      {showTrailer && trailerUrl && (
+        <div className="relative bg-background py-8">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="relative w-full h-0 pb-[56.25%]">
+                <iframe
+                  src={trailerUrl}
+                  title="Movie Trailer"
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  frameBorder="0"
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Movie Modal */}
       {showModal && (

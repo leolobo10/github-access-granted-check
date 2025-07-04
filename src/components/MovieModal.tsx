@@ -20,6 +20,7 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
   const [movieDetails, setMovieDetails] = useState<Movie | null>(null);
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
     if (isOpen && movie) {
@@ -123,10 +124,10 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
                   <Button
                     size="lg"
                     className="bg-white text-black hover:bg-white/90"
-                    onClick={() => window.open(trailerUrl, '_blank')}
+                    onClick={() => setShowTrailer(!showTrailer)}
                   >
                     <Play className="h-5 w-5 mr-2" />
-                    Assistir Trailer
+                    {showTrailer ? 'Fechar Trailer' : 'Assistir Trailer'}
                   </Button>
                 ) : (
                   <Button
@@ -162,6 +163,22 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
               </div>
             </div>
           </div>
+
+          {/* Trailer Section */}
+          {showTrailer && trailerUrl && (
+            <div className="px-6 pb-6">
+              <div className="relative w-full h-0 pb-[56.25%]">
+                <iframe
+                  src={trailerUrl}
+                  title="Movie Trailer"
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  frameBorder="0"
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Content */}
           <div className="p-6">
