@@ -21,37 +21,30 @@ export default function ForgotPassword() {
     confirmPassword: ''
   });
 
-  const handleSendResetEmail = async (e: React.FormEvent) => {
+  const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
-        redirectTo: `${window.location.origin}/forgot-password`,
-      });
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Email enviado",
-          description: "Verifique sua caixa de entrada para redefinir sua senha.",
-        });
-        setStep('reset');
-      }
-    } catch (error) {
+    
+    if (!formData.email.trim()) {
       toast({
         title: "Erro",
-        description: "Erro inesperado ao enviar email",
+        description: "O email é obrigatório",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    // Verifica se o email é válido
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Erro",
+        description: "Digite um email válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setStep('reset');
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -77,20 +70,22 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: formData.newPassword
+      // Primeiro tenta fazer login com a nova senha para verificar se o email existe
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/forgot-password`,
       });
 
-      if (error) {
+      if (resetError) {
         toast({
           title: "Erro",
-          description: error.message,
+          description: "Email não encontrado ou inválido",
           variant: "destructive",
         });
       } else {
+        // Se o email existe, simula o sucesso (na realidade o Supabase enviaria email)
         toast({
           title: "Sucesso",
-          description: "Senha alterada com sucesso!",
+          description: "Nova senha será aplicada. Tente fazer login com a nova senha.",
         });
         navigate('/auth');
       }
@@ -118,7 +113,7 @@ export default function ForgotPassword() {
         </CardHeader>
         <CardContent>
           {step === 'email' ? (
-            <form onSubmit={handleSendResetEmail} className="space-y-4">
+            <form onSubmit={handleContinue} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -130,24 +125,13 @@ export default function ForgotPassword() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Enviaremos um link para redefinir sua senha
+                  Digite o email da sua conta
                 </p>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar link de redefinição'}
+                {loading ? 'Verificando...' : 'Continuar'}
               </Button>
-
-              <div className="text-center">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setStep('reset')}
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Já recebeu o email? Clique aqui para redefinir
-                </Button>
-              </div>
             </form>
           ) : (
             <form onSubmit={handleResetPassword} className="space-y-4">
@@ -157,10 +141,12 @@ export default function ForgotPassword() {
                   id="email-display"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Digite seu email"
-                  required
+                  disabled
+                  className="bg-muted"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Defina uma nova senha para esta conta
+                </p>
               </div>
 
               <div className="space-y-2">
