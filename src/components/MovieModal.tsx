@@ -211,16 +211,30 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
     try {
       const movieTitle = getMovieTitle(movieDetails || movie);
       
-      const { error } = await supabase
-        .from('avaliacoes')
-        .insert({
-          idcliente: user.id,
-          idfilme: String(movie.id),
-          nomefilme: movieTitle,
-          comentario: newComment.trim()
-        });
+      // Check if user already has a rating for this movie
+      const existingRating = ratings.find(r => r.idcliente === user.id);
+      
+      if (existingRating) {
+        // Update existing rating with comment
+        const { error } = await supabase
+          .from('avaliacoes')
+          .update({ comentario: newComment.trim() })
+          .eq('id', existingRating.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Create new rating with comment only
+        const { error } = await supabase
+          .from('avaliacoes')
+          .insert({
+            idcliente: user.id,
+            idfilme: String(movie.id),
+            nomefilme: movieTitle,
+            comentario: newComment.trim()
+          });
+
+        if (error) throw error;
+      }
       
       setNewComment('');
       toast({
