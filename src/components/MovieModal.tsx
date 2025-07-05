@@ -1,16 +1,29 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Check, Play } from 'lucide-react';
+import { X, Plus, Check, Play, ThumbsUp, ThumbsDown, MessageCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Movie, useTMDB } from '@/hooks/useTMDB';
 import { useMovies } from '@/hooks/useMovies';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MovieModalProps {
   movie: Movie;
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface Rating {
+  id: string;
+  idcliente: string;
+  idfilme: string;
+  nomefilme: string;
+  tipo_avaliacao: 'like' | 'dislike';
+  comentario: string | null;
+  created_at: string;
+  nome_cliente?: string;
 }
 
 export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
@@ -21,10 +34,15 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [ratings, setRatings] = useState<Rating[]>([]);
+  const [userRating, setUserRating] = useState<'like' | 'dislike' | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [loadingRatings, setLoadingRatings] = useState(false);
 
   useEffect(() => {
     if (isOpen && movie) {
       loadMovieData();
+      loadRatings();
     }
   }, [isOpen, movie]);
 
@@ -45,6 +63,209 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
       setMovieDetails(movie);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRatings = async () => {
+    setLoadingRatings(true);
+    try {
+      const movieTitle = getMovieTitle(movie);
+      const { data: ratingsData, error } = await supabase
+        .from('avaliacoes')
+        .select('*')
+        .eq('nomefilme', movieTitle)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao carregar avaliações:', error);
+        return;
+      }
+
+      // Get user names for each rating
+      const ratingsWithNames = [];
+      for (const rating of ratingsData || []) {
+        const { data: clienteData } = await supabase
+          .from('cliente')
+          .select('nome')
+          .eq('idcliente', rating.idcliente)
+          .single();
+
+        ratingsWithNames.push({
+          ...rating,
+          tipo_avaliacao: rating.tipo_avaliacao as 'like' | 'dislike' | null,
+          nome_cliente: clienteData?.nome || 'Usuário'
+        });
+      }
+
+      setRatings(ratingsWithNames);
+
+      // Check user's current rating
+      if (user) {
+        const userCurrentRating = ratingsWithNames.find(r => r.idcliente === user.id);
+        setUserRating(userCurrentRating?.tipo_avaliacao || null);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar avaliações:', error);
+    } finally {
+      setLoadingRatings(false);
+    }
+  };
+
+  const handleRating = async (type: 'like' | 'dislike') => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para avaliar filmes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const movieTitle = getMovieTitle(movieDetails || movie);
+      
+      // Check if user already has a rating
+      const existingRating = ratings.find(r => r.idcliente === user.id);
+      
+      if (existingRating) {
+        if (existingRating.tipo_avaliacao === type) {
+          // Remove rating if clicking the same type
+          const { error } = await supabase
+            .from('avaliacoes')
+            .delete()
+            .eq('id', existingRating.id);
+
+          if (error) throw error;
+          
+          setUserRating(null);
+          toast({
+            title: "Avaliação removida",
+            description: "Sua avaliação foi removida",
+          });
+        } else {
+          // Update rating type
+          const { error } = await supabase
+            .from('avaliacoes')
+            .update({ tipo_avaliacao: type })
+            .eq('id', existingRating.id);
+
+          if (error) throw error;
+          
+          setUserRating(type);
+          toast({
+            title: "Avaliação atualizada",
+            description: `Você ${type === 'like' ? 'curtiu' : 'não curtiu'} este filme`,
+          });
+        }
+      } else {
+        // Create new rating
+        const { error } = await supabase
+          .from('avaliacoes')
+          .insert({
+            idcliente: user.id,
+            idfilme: String(movie.id),
+            nomefilme: movieTitle,
+            tipo_avaliacao: type
+          });
+
+        if (error) throw error;
+        
+        setUserRating(type);
+        toast({
+          title: "Avaliação registrada",
+          description: `Você ${type === 'like' ? 'curtiu' : 'não curtiu'} este filme`,
+        });
+      }
+
+      // Reload ratings
+      await loadRatings();
+    } catch (error) {
+      console.error('Erro ao avaliar filme:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao registrar avaliação",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para comentar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newComment.trim()) {
+      toast({
+        title: "Comentário vazio",
+        description: "Digite um comentário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const movieTitle = getMovieTitle(movieDetails || movie);
+      
+      const { error } = await supabase
+        .from('avaliacoes')
+        .insert({
+          idcliente: user.id,
+          idfilme: String(movie.id),
+          nomefilme: movieTitle,
+          comentario: newComment.trim()
+        });
+
+      if (error) throw error;
+      
+      setNewComment('');
+      toast({
+        title: "Comentário adicionado",
+        description: "Seu comentário foi publicado",
+      });
+
+      // Reload ratings
+      await loadRatings();
+    } catch (error) {
+      console.error('Erro ao adicionar comentário:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar comentário",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('avaliacoes')
+        .delete()
+        .eq('id', commentId)
+        .eq('idcliente', user.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Comentário removido",
+        description: "Seu comentário foi removido",
+      });
+
+      // Reload ratings
+      await loadRatings();
+    } catch (error) {
+      console.error('Erro ao remover comentário:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover comentário",
+        variant: "destructive",
+      });
     }
   };
 
@@ -226,6 +447,124 @@ export const MovieModal = ({ movie, isOpen, onClose }: MovieModalProps) => {
                       <div>
                         <strong>Primeira Exibição:</strong> {new Date(currentMovie.first_air_date).toLocaleDateString('pt-BR')}
                       </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Rating and Comments Section */}
+            <div className="mt-8 border-t pt-6">
+              {/* Rating Buttons */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-4">Avalie este filme</h3>
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant={userRating === 'like' ? 'default' : 'outline'}
+                    onClick={() => handleRating('like')}
+                    className="flex items-center gap-2"
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    Gostei
+                    <span className="text-sm">
+                      ({ratings.filter(r => r.tipo_avaliacao === 'like').length})
+                    </span>
+                  </Button>
+                  <Button
+                    variant={userRating === 'dislike' ? 'destructive' : 'outline'}
+                    onClick={() => handleRating('dislike')}
+                    className="flex items-center gap-2"
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                    Não Gostei
+                    <span className="text-sm">
+                      ({ratings.filter(r => r.tipo_avaliacao === 'dislike').length})
+                    </span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add Comment Section */}
+              {user && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4">
+                    <MessageCircle className="inline h-5 w-5 mr-2" />
+                    Deixe seu comentário
+                  </h3>
+                  <div className="space-y-3">
+                    <Textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="O que você achou deste filme?"
+                      rows={3}
+                      className="resize-none"
+                    />
+                    <Button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                      className="w-full sm:w-auto"
+                    >
+                      Publicar Comentário
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Comments List */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">
+                  Comentários ({ratings.filter(r => r.comentario).length})
+                </h3>
+                
+                {loadingRatings ? (
+                  <div className="text-center py-4">
+                    <p>Carregando comentários...</p>
+                  </div>
+                ) : ratings.filter(r => r.comentario).length > 0 ? (
+                  <div className="space-y-4">
+                    {ratings
+                      .filter(r => r.comentario)
+                      .map((rating) => (
+                        <div key={rating.id} className="bg-muted/30 rounded-lg p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-semibold text-primary">
+                                  {rating.nome_cliente}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(rating.created_at).toLocaleDateString('pt-BR')}
+                                </span>
+                              </div>
+                              <p className="text-foreground leading-relaxed">
+                                {rating.comentario}
+                              </p>
+                            </div>
+                            {user && user.id === rating.idcliente && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteComment(rating.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhum comentário ainda.</p>
+                    {!user && (
+                      <p className="text-sm mt-2">
+                        <Button variant="link" onClick={() => window.location.href = '/auth'}>
+                          Faça login
+                        </Button>
+                        para deixar o primeiro comentário!
+                      </p>
                     )}
                   </div>
                 )}

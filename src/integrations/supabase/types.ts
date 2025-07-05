@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      avaliacoes: {
+        Row: {
+          comentario: string | null
+          created_at: string
+          id: string
+          idcliente: string
+          idfilme: string
+          nomefilme: string
+          tipo_avaliacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          idcliente: string
+          idfilme: string
+          nomefilme: string
+          tipo_avaliacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          idcliente?: string
+          idfilme?: string
+          nomefilme?: string
+          tipo_avaliacao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente: {
         Row: {
           ativo: boolean
