@@ -70,8 +70,30 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      // Simula a atualização da senha (em produção, isso precisaria de autenticação adequada)
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simula delay da API
+      const response = await supabase.functions.invoke('reset-password', {
+        body: {
+          email: formData.email,
+          newPassword: formData.newPassword
+        }
+      });
+
+      if (response.error) {
+        toast({
+          title: "Erro",
+          description: response.error.message || "Erro ao atualizar senha",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (response.data?.error) {
+        toast({
+          title: "Erro",
+          description: response.data.error,
+          variant: "destructive",
+        });
+        return;
+      }
       
       toast({
         title: "Sucesso",
