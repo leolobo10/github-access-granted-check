@@ -209,14 +209,24 @@ export default function Auth() {
             </Button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
             >
               {isLogin ? 'Não tem conta? Crie uma aqui' : 'Já tem conta? Faça login'}
             </button>
+            
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => window.location.href = '/forgot-password'}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Esqueceu da senha?
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
