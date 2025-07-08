@@ -172,9 +172,25 @@ export default function Profile() {
       });
     } catch (error: any) {
       console.error('Erro ao alterar senha:', error);
+      let errorMessage = "Erro ao alterar senha";
+      
+      if (error.message?.includes('New password should be different')) {
+        errorMessage = "A nova senha deve ser diferente da atual";
+      } else if (error.message?.includes('Password should be at least')) {
+        errorMessage = "A senha deve ter pelo menos 6 caracteres";
+      } else if (error.message?.includes('weak password')) {
+        errorMessage = "A senha é muito fraca. Use uma senha mais forte.";
+      } else if (error.message?.includes('Auth session missing')) {
+        errorMessage = "Sessão expirada. Faça login novamente.";
+      } else if (error.message?.includes('Invalid refresh token')) {
+        errorMessage = "Sessão inválida. Faça login novamente.";
+      } else if (error.message?.includes('JWT expired')) {
+        errorMessage = "Sessão expirada. Faça login novamente.";
+      }
+      
       toast({
         title: "Erro",
-        description: error.message || "Erro ao alterar senha",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -224,9 +240,17 @@ export default function Profile() {
       navigate('/auth');
     } catch (error: any) {
       console.error('Erro ao apagar conta:', error);
+      let errorMessage = "Erro ao apagar conta. Tente novamente.";
+      
+      if (error.message?.includes('delete')) {
+        errorMessage = "Erro ao eliminar dados. Tente novamente.";
+      } else if (error.message?.includes('Network')) {
+        errorMessage = "Erro de rede. Verifique a sua conexão.";
+      }
+      
       toast({
         title: "Erro",
-        description: error.message || "Erro ao apagar conta. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -93,8 +93,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (error.message.includes('weak password')) {
           return { error: 'A senha deve ter pelo menos 6 caracteres.' };
         }
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: 'Email ou senha incorretos' };
+        }
+        if (error.message.includes('Email not confirmed')) {
+          return { error: 'Confirme o seu email antes de fazer login' };
+        }
+        if (error.message.includes('Too many requests')) {
+          return { error: 'Muitas tentativas. Tente novamente mais tarde.' };
+        }
+        if (error.message.includes('Password should be at least')) {
+          return { error: 'A senha deve ter pelo menos 6 caracteres' };
+        }
+        if (error.message.includes('Unable to validate email address')) {
+          return { error: 'Email inválido' };
+        }
+        if (error.message.includes('Signup requires a valid password')) {
+          return { error: 'Digite uma senha válida' };
+        }
         
-        return { error: error.message };
+        return { error: 'Erro inesperado. Tente novamente.' };
       }
 
       if (data.user) {
@@ -135,7 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };

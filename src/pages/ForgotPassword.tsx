@@ -78,18 +78,36 @@ export default function ForgotPassword() {
       });
 
       if (response.error) {
+        let errorMessage = "Erro ao atualizar senha";
+        
+        if (response.error.message?.includes('User not found')) {
+          errorMessage = "Utilizador não encontrado";
+        } else if (response.error.message?.includes('Password should be at least')) {
+          errorMessage = "A senha deve ter pelo menos 6 caracteres";
+        } else if (response.error.message?.includes('weak password')) {
+          errorMessage = "A senha é muito fraca. Use uma senha mais forte.";
+        }
+        
         toast({
           title: "Erro",
-          description: response.error.message || "Erro ao atualizar senha",
+          description: errorMessage,
           variant: "destructive",
         });
         return;
       }
 
       if (response.data?.error) {
+        let errorMessage = response.data.error;
+        
+        if (errorMessage.includes('User not found')) {
+          errorMessage = "Utilizador não encontrado";
+        } else if (errorMessage.includes('Invalid email')) {
+          errorMessage = "Email inválido";
+        }
+        
         toast({
           title: "Erro",
-          description: response.data.error,
+          description: errorMessage,
           variant: "destructive",
         });
         return;
@@ -101,9 +119,17 @@ export default function ForgotPassword() {
       });
       navigate('/auth');
     } catch (error: any) {
+      let errorMessage = "Erro ao alterar senha";
+      
+      if (error.message?.includes('fetch')) {
+        errorMessage = "Erro de conexão. Verifique a sua internet.";
+      } else if (error.message?.includes('Network')) {
+        errorMessage = "Erro de rede. Tente novamente.";
+      }
+      
       toast({
         title: "Erro",
-        description: error.message || "Erro ao alterar senha",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
