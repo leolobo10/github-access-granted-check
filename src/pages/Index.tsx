@@ -55,11 +55,11 @@ const Index = () => {
     }
   };
 
-  const handleGenreSelect = async (genreId: number, type: 'movie' | 'tv') => {
+  const handleGenreSelect = async (genreId: number, type: 'movie' | 'tv', genreName: string) => {
     try {
       const movies = await getMoviesByGenre(genreId, type);
       setSearchResults(movies);
-      setSearchQuery(`Filmes de ${type === 'movie' ? 'cinema' : 'TV'}`);
+      setSearchQuery(`${type === 'movie' ? 'filmes' : 'séries'} de ${genreName.toLowerCase()}`);
       setIsSearching(true);
     } catch (error) {
       console.error('Error loading genre movies:', error);

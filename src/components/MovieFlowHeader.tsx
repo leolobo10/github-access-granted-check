@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface MovieFlowHeaderProps {
   onSearch: (query: string) => void;
-  onGenreSelect: (genreId: number, type: 'movie' | 'tv') => void;
+  onGenreSelect: (genreId: number, type: 'movie' | 'tv', genreName: string) => void;
 }
 
 export const MovieFlowHeader = ({ onSearch, onGenreSelect }: MovieFlowHeaderProps) => {
@@ -83,7 +83,7 @@ export const MovieFlowHeader = ({ onSearch, onGenreSelect }: MovieFlowHeaderProp
                       <button
                         key={genre.id}
                         onClick={() => {
-                          onGenreSelect(genre.id, 'movie');
+                          onGenreSelect(genre.id, 'movie', genre.name);
                           setShowMovieGenres(false);
                         }}
                         className="block w-full px-4 py-2 text-left text-card-foreground hover:bg-accent transition-colors"
@@ -111,7 +111,7 @@ export const MovieFlowHeader = ({ onSearch, onGenreSelect }: MovieFlowHeaderProp
                       <button
                         key={genre.id}
                         onClick={() => {
-                          onGenreSelect(genre.id, 'tv');
+                          onGenreSelect(genre.id, 'tv', genre.name);
                           setShowTvGenres(false);
                         }}
                         className="block w-full px-4 py-2 text-left text-card-foreground hover:bg-accent transition-colors"
