@@ -20,6 +20,8 @@ export const MovieFlowHeader = ({ onSearch, onGenreSelect }: MovieFlowHeaderProp
   const [tvGenres, setTvGenres] = useState<Genre[]>([]);
   const [showMovieGenres, setShowMovieGenres] = useState(false);
   const [showTvGenres, setShowTvGenres] = useState(false);
+  const [movieGenresTimeout, setMovieGenresTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [tvGenresTimeout, setTvGenresTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const loadGenres = async () => {
@@ -37,6 +39,36 @@ export const MovieFlowHeader = ({ onSearch, onGenreSelect }: MovieFlowHeaderProp
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(searchQuery);
+  };
+
+  const handleMovieGenresEnter = () => {
+    if (movieGenresTimeout) {
+      clearTimeout(movieGenresTimeout);
+      setMovieGenresTimeout(null);
+    }
+    setShowMovieGenres(true);
+  };
+
+  const handleMovieGenresLeave = () => {
+    const timeout = setTimeout(() => {
+      setShowMovieGenres(false);
+    }, 300); // 300ms delay
+    setMovieGenresTimeout(timeout);
+  };
+
+  const handleTvGenresEnter = () => {
+    if (tvGenresTimeout) {
+      clearTimeout(tvGenresTimeout);
+      setTvGenresTimeout(null);
+    }
+    setShowTvGenres(true);
+  };
+
+  const handleTvGenresLeave = () => {
+    const timeout = setTimeout(() => {
+      setShowTvGenres(false);
+    }, 300); // 300ms delay
+    setTvGenresTimeout(timeout);
   };
 
   const handleHomeClick = () => {
@@ -70,15 +102,19 @@ export const MovieFlowHeader = ({ onSearch, onGenreSelect }: MovieFlowHeaderProp
               {/* Movies Dropdown */}
               <div 
                 className="relative"
-                onMouseEnter={() => setShowMovieGenres(true)}
-                onMouseLeave={() => setShowMovieGenres(false)}
+                onMouseEnter={handleMovieGenresEnter}
+                onMouseLeave={handleMovieGenresLeave}
               >
                 <button className="text-foreground/80 hover:text-foreground transition-colors">
                   Filmes
                 </button>
                 
                 {showMovieGenres && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-lg py-2 max-h-80 overflow-y-auto">
+                  <div 
+                    className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-lg py-2 max-h-80 overflow-y-auto z-50"
+                    onMouseEnter={handleMovieGenresEnter}
+                    onMouseLeave={handleMovieGenresLeave}
+                  >
                     {movieGenres.map((genre) => (
                       <button
                         key={genre.id}
@@ -98,15 +134,19 @@ export const MovieFlowHeader = ({ onSearch, onGenreSelect }: MovieFlowHeaderProp
               {/* TV Shows Dropdown */}
               <div 
                 className="relative"
-                onMouseEnter={() => setShowTvGenres(true)}
-                onMouseLeave={() => setShowTvGenres(false)}
+                onMouseEnter={handleTvGenresEnter}
+                onMouseLeave={handleTvGenresLeave}
               >
                 <button className="text-foreground/80 hover:text-foreground transition-colors">
                   Séries
                 </button>
                 
                 {showTvGenres && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-lg py-2 max-h-80 overflow-y-auto">
+                  <div 
+                    className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-lg py-2 max-h-80 overflow-y-auto z-50"
+                    onMouseEnter={handleTvGenresEnter}
+                    onMouseLeave={handleTvGenresLeave}
+                  >
                     {tvGenres.map((genre) => (
                       <button
                         key={genre.id}
