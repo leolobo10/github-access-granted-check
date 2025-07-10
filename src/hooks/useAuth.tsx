@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          return { error: 'Email ou senha incorretos' };
+          return { error: 'Esta conta não existe. Crie uma conta.' };
         }
         return { error: error.message };
       }
@@ -87,8 +87,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Erro no signup:', error);
         
-        if (error.message.includes('already registered')) {
-          return { error: 'Este email já está registado. Tente fazer login.' };
+        if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+          return { error: 'Este email já está atribuído a uma conta. Utilize outro email.' };
         }
         if (error.message.includes('weak password')) {
           return { error: 'A senha deve ter pelo menos 6 caracteres.' };
