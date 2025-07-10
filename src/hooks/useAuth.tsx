@@ -56,26 +56,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('Erro de login:', error.message);
         if (error.message.includes('Invalid login credentials')) {
           console.log('Verificando se email existe:', email);
-          // Verificar se o email existe na tabela cliente
-          const { data: clienteData, error: checkError } = await supabase
-            .from('cliente')
-            .select('email')
-            .eq('email', email)
-            .maybeSingle();
           
-          console.log('Resultado verificação:', { clienteData, checkError });
-          
-          if (checkError) {
-            console.error('Erro ao verificar email:', checkError);
-            return { error: 'Erro ao verificar conta' };
-          }
-          
-          if (clienteData) {
-            console.log('Email existe - senha incorreta');
-            return { error: 'Senha incorreta. Tente novamente.' };
-          } else {
-            console.log('Email não existe - conta não existe');
-            return { error: 'Esta conta não existe. Crie uma conta.' };
+          // Verificar primeiro na tabela auth.users através de uma tentativa de signup temporária
+          try {
+            // Tentar fazer signup com dados temporários - se o email já existe, vai dar erro
+            const { error: signupError } = await supabase.auth.signUp({
+              email,
+              password: 'temp_password_123456', // Password temporária
+              options: {
+                data: { nome: 'temp' }
+              }
+            });
+            
+            console.log('Teste signup:', signupError?.message);
+            
+            if (signupError?.message?.includes('already registered') || 
+                signupError?.message?.includes('User already registered')) {
+              console.log('Email existe - senha incorreta');
+              return { error: 'Senha incorreta. Tente novamente.' };
+            } else {
+              console.log('Email não existe - conta não existe');
+              return { error: 'Esta conta não existe. Crie uma conta.' };
+            }
+          } catch (checkError) {
+            console.error('Erro na verificação:', checkError);
+            // Fallback para mensagem genérica
+            return { error: 'Email ou senha incorretos' };
           }
         }
         return { error: error.message };
