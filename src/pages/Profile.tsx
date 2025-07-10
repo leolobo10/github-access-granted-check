@@ -208,52 +208,22 @@ export default function Profile() {
 
     setDeleteLoading(true);
     try {
-      // Primeiro deletar avaliações do utilizador
-      const { error: avaliacoesError } = await supabase
-        .from('avaliacoes')
-        .delete()
-        .eq('idcliente', user.id);
+      // Chamar a Edge Function para apagar completamente a conta
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
 
-      if (avaliacoesError) {
-        console.error('Erro ao deletar avaliações:', avaliacoesError);
+      if (error) {
+        console.error('Erro ao apagar conta:', error);
+        throw new Error(error.message || 'Erro ao apagar conta');
       }
 
-      // Deletar filmes adicionados do utilizador  
-      const { error: filmesError } = await supabase
-        .from('filmesadicionados')
-        .delete()
-        .eq('idcliente', user.id);
-
-      if (filmesError) {
-        console.error('Erro ao deletar filmes:', filmesError);
-      }
-
-      // Deletar dados da tabela cliente
-      const { error: clienteError } = await supabase
-        .from('cliente')
-        .delete()
-        .eq('idcliente', user.id);
-
-      if (clienteError) {
-        console.error('Erro ao deletar dados do cliente:', clienteError);
-      }
-
-      // Apagar a conta de autenticação completamente
-      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
-      
-      if (authError) {
-        console.error('Erro ao deletar conta de autenticação:', authError);
-        
-        toast({
-          title: "Conta parcialmente removida",
-          description: "Dados da aplicação removidos. Entre em contato para completar a remoção da conta de autenticação.",
-        });
-      } else {
-        toast({
-          title: "Conta apagada completamente",
-          description: "Sua conta foi removida completamente do sistema.",
-        });
-      }
+      toast({
+        title: "Conta apagada com sucesso",
+        description: "Os seus dados foram eliminados permanentemente.",
+      });
 
       // Fazer logout e redirecionar
       await signOut();
