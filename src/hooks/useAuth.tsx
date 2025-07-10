@@ -53,7 +53,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        console.log('Erro de login:', error.message);
         if (error.message.includes('Invalid login credentials')) {
+          console.log('Verificando se email existe:', email);
           // Verificar se o email existe na tabela cliente
           const { data: clienteData, error: checkError } = await supabase
             .from('cliente')
@@ -61,14 +63,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .eq('email', email)
             .maybeSingle();
           
+          console.log('Resultado verificação:', { clienteData, checkError });
+          
           if (checkError) {
             console.error('Erro ao verificar email:', checkError);
             return { error: 'Erro ao verificar conta' };
           }
           
           if (clienteData) {
+            console.log('Email existe - senha incorreta');
             return { error: 'Senha incorreta. Tente novamente.' };
           } else {
+            console.log('Email não existe - conta não existe');
             return { error: 'Esta conta não existe. Crie uma conta.' };
           }
         }
