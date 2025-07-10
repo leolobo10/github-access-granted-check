@@ -55,11 +55,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           // Verificar se o email existe na tabela cliente
-          const { data: clienteData } = await supabase
+          const { data: clienteData, error: checkError } = await supabase
             .from('cliente')
             .select('email')
             .eq('email', email)
-            .single();
+            .maybeSingle();
+          
+          if (checkError) {
+            console.error('Erro ao verificar email:', checkError);
+            return { error: 'Erro ao verificar conta' };
+          }
           
           if (clienteData) {
             return { error: 'Senha incorreta. Tente novamente.' };
