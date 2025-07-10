@@ -54,7 +54,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          return { error: 'Esta conta não existe. Crie uma conta.' };
+          // Verificar se o email existe na tabela cliente
+          const { data: clienteData } = await supabase
+            .from('cliente')
+            .select('email')
+            .eq('email', email)
+            .single();
+          
+          if (clienteData) {
+            return { error: 'Senha incorreta. Tente novamente.' };
+          } else {
+            return { error: 'Esta conta não existe. Crie uma conta.' };
+          }
         }
         return { error: error.message };
       }
